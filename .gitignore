@@ -20,7 +20,7 @@ lerna-debug.log*
 # Test artifacts
 test-results/
 frontend/test-results/
-frontend/artifacts/tests/
+frontend/tests/
 playwright-report/
 frontend/playwright-report/
 
