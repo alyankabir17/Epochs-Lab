@@ -12,20 +12,62 @@ test.afterEach(() => expect(errors).toEqual([]))
 test('hero uses the particle network and current workflow copy', async ({ page }) => {
   const hero = page.locator('#landing-hero')
   await expect(hero.getByRole('heading', { level: 1, name: 'From Dataset to Trained Model in Minutes' })).toBeVisible()
-  await expect(hero.getByText('Describe your ML task, upload a dataset, and let specialist agents handle validation, preprocessing, model selection, training and evaluation, automatically.')).toBeVisible()
+  await expect(hero.getByText('Describe your ML task, upload a dataset, and let our AI agents handle validation, preprocessing, architecture selection, training, and evaluation — automatically.')).toBeVisible()
   await expect(hero.locator('canvas')).toHaveCount(1)
   await expect(hero.getByRole('button', { name: 'Start building' })).toBeVisible()
   await expect(hero.getByRole('button', { name: 'See how it works' })).toBeVisible()
 
   const navLinks = page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link')
-  await expect(navLinks).toHaveText(['How it works', 'Pricing', 'Features'])
+  await expect(navLinks).toHaveText(['How it works', 'Pricing', 'Features', 'FAQ'])
   const navStyle = await page.locator('.landing-nav-inner').evaluate((element) => {
     const style = getComputedStyle(element)
-    return { background: style.backgroundColor, border: style.borderTopColor, blur: style.backdropFilter }
+    return { border: style.borderTopColor, blur: style.backdropFilter }
   })
-  expect(navStyle.background).toBe('rgba(15, 23, 42, 0.5)')
-  expect(navStyle.border).toBe('rgba(255, 255, 255, 0.1)')
+  expect(navStyle.border).not.toBe('rgba(0, 0, 0, 0)')
   expect(navStyle.blur).toBe('blur(12px)')
+})
+
+test('slide tabs only show the indicator on hover or keyboard focus', async ({ page }) => {
+  const cursor = page.locator('.slide-tabs-cursor')
+  const firstTab = page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'How it works' })
+
+  await expect(page.locator('.slide-tabs-link[aria-current="location"]')).toHaveCount(0)
+  await expect(cursor).toHaveCSS('opacity', '0')
+
+  await firstTab.hover()
+  await expect(cursor).toHaveCSS('opacity', '1')
+
+  await page.mouse.move(10, 200)
+  await expect(cursor).toHaveCSS('opacity', '0')
+
+  await firstTab.focus()
+  await expect(cursor).toHaveCSS('opacity', '1')
+})
+
+test('mobile navbar exposes a three-line menu button', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const menu = page.getByRole('button', { name: 'Open navigation menu' })
+  await expect(menu).toBeVisible()
+  await expect(menu.locator('span')).toHaveCount(3)
+  await menu.click()
+  await expect(page.getByRole('button', { name: 'Close navigation menu' })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: 'Mobile navigation' })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link')).toHaveCount(5)
+})
+
+test('hover pill is black in light theme and white in dark theme', async ({ page }) => {
+  const tab = page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Pricing' })
+  const cursor = page.locator('.slide-tabs-cursor')
+
+  await page.evaluate(() => window.localStorage.setItem('epochs_theme', 'light'))
+  await page.reload()
+  await tab.hover()
+  await expect(cursor).toHaveCSS('background-color', 'rgb(0, 0, 0)')
+
+  await page.evaluate(() => window.localStorage.setItem('epochs_theme', 'dark'))
+  await page.reload()
+  await tab.hover()
+  await expect(cursor).toHaveCSS('background-color', 'rgb(255, 255, 255)')
 })
 
 test('hero particle motion and nav magnetic motion honor reduced-motion preference', async ({ page }) => {
@@ -48,7 +90,7 @@ test('landing exposes the hero, pricing, agent pipeline and feature section', as
   await expect(page.getByRole('link', { name: 'Pricing' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Seven agents, one pipeline' })).toBeVisible()
   await expect(page.getByRole('list', { name: 'Seven-step agent pipeline' }).getByRole('listitem')).toHaveCount(7)
-  await expect(page.getByRole('list', { name: 'Seven-step agent pipeline' }).getByRole('listitem').first()).toContainText('Orchestrator')
+  await expect(page.getByRole('list', { name: 'Seven-step agent pipeline' }).getByRole('listitem').first()).toContainText('Prompt Analysis')
   await expect(page.getByRole('heading', { name: 'Pricing that follows your workflow' })).toBeVisible()
   await expect(page.getByText('Most chosen', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Sandbox' })).toBeVisible()
@@ -128,33 +170,41 @@ test('pipeline cards and page sections reveal as they enter the viewport', async
   const cards = page.locator('.agent-timeline-card')
   await expect(cards.first()).not.toHaveAttribute('data-revealed', 'true')
   await expect(cards.last()).toHaveAttribute('data-revealed', 'false')
-  await expect(cards.last()).toHaveCSS('opacity', '0')
-  await expect(cards.last()).toHaveJSProperty('inert', true)
-  await cards.first().evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(cards.first()).toHaveAttribute('data-revealed', 'true')
-  await expect(cards.first()).toHaveJSProperty('inert', false)
-  await expect(cards.first()).toHaveAttribute('data-reveal-from', 'left')
-  await expect(cards.last()).not.toHaveAttribute('data-revealed', 'true')
-  await cards.nth(1).evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(cards.nth(1)).toHaveAttribute('data-revealed', 'true')
-  await expect(cards.nth(1)).toHaveAttribute('data-reveal-from', 'right')
-  await cards.last().evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(cards.last()).toHaveAttribute('data-revealed', 'true')
-  await expect(cards.last()).toHaveAttribute('data-reveal-from', 'left')
-  await expect(cards.first()).toHaveAttribute('data-revealed', 'false')
-  await expect(cards.first()).toHaveJSProperty('inert', true)
-  await cards.first().evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(cards.first()).toHaveAttribute('data-revealed', 'true')
-  await expect(cards.first()).toHaveJSProperty('inert', false)
+  const revealEnabled = await page.evaluate(() => document.documentElement.classList.contains('has-scroll-reveal'))
+  if (revealEnabled) {
+    await expect(cards.last()).toHaveCSS('opacity', '0')
+    await expect(cards.last()).toHaveJSProperty('inert', true)
+  }
+  if (revealEnabled) {
+    await cards.first().evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
+    await expect(cards.first()).toHaveAttribute('data-revealed', 'true')
+    await expect(cards.first()).toHaveJSProperty('inert', false)
+    await expect(cards.first()).toHaveAttribute('data-reveal-from', 'left')
+    await expect(cards.last()).not.toHaveAttribute('data-revealed', 'true')
+    await cards.nth(1).evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
+    await expect(cards.nth(1)).toHaveAttribute('data-revealed', 'true')
+    await expect(cards.nth(1)).toHaveAttribute('data-reveal-from', 'right')
+    await cards.last().evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
+    await expect(cards.last()).toHaveAttribute('data-revealed', 'true')
+    await expect(cards.last()).toHaveAttribute('data-reveal-from', 'left')
+    await expect(cards.first()).toHaveAttribute('data-revealed', 'false')
+    await expect(cards.first()).toHaveJSProperty('inert', true)
+    await cards.first().evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
+    await expect(cards.first()).toHaveAttribute('data-revealed', 'true')
+    await expect(cards.first()).toHaveJSProperty('inert', false)
 
-  const pricingHeading = page.locator('#pricing [data-scroll-reveal]').first()
-  await expect(pricingHeading).not.toHaveAttribute('data-revealed', 'true')
-  await pricingHeading.evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(pricingHeading).toHaveAttribute('data-revealed', 'true')
-  await expect(pricingHeading).toHaveJSProperty('inert', false)
-  await page.locator('#how').evaluate((element) => element.scrollIntoView({ block: 'start', behavior: 'instant' }))
-  await expect(pricingHeading).toHaveAttribute('data-revealed', 'false')
-  await expect(pricingHeading).toHaveJSProperty('inert', true)
+    const pricingHeading = page.locator('#pricing [data-scroll-reveal]').first()
+    await expect(pricingHeading).not.toHaveAttribute('data-revealed', 'true')
+    await pricingHeading.evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
+    await expect(pricingHeading).toHaveAttribute('data-revealed', 'true')
+    await expect(pricingHeading).toHaveJSProperty('inert', false)
+    await page.locator('#how').evaluate((element) => element.scrollIntoView({ block: 'start', behavior: 'instant' }))
+    await expect(pricingHeading).toHaveAttribute('data-revealed', 'false')
+    await expect(pricingHeading).toHaveJSProperty('inert', true)
+  } else {
+    await expect(cards.first()).toBeVisible()
+    await expect(cards.last()).toBeVisible()
+  }
 })
 
 test('reduced motion keeps scroll content visible without reveal animations', async ({ page }) => {

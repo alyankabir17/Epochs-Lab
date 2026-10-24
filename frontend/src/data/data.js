@@ -1,22 +1,25 @@
 export const AGENTS = [
-  { id: 'data', name: 'Data collection', short: 'Data', color: '#3b5bff', text: '#3b5bff',
+  { id: 'prompt', name: 'Prompt Analysis', short: 'Prompt', color: '#7c3aed', text: '#6d28d9',
+    blurb: 'Reads the goal, identifies the prediction task, and turns the request into an execution plan.',
+    output: 'Task type and execution plan', gate: null },
+  { id: 'dataset', name: 'Dataset Search', short: 'Dataset', color: '#3b5bff', text: '#2f4bd8',
     blurb: 'Finds datasets on Kaggle and HuggingFace, ranks them against your goal, or uses the CSV you upload.',
-    output: 'Ranked datasets and a profile', gate: 'Choose a dataset' },
-  { id: 'prep', name: 'Preprocessing', short: 'Cleaning', color: '#13b58c', text: '#0e9c78',
+    output: 'Ranked dataset candidates', gate: 'Choose a dataset' },
+  { id: 'profile', name: 'Data Profiling', short: 'Profile', color: '#0ea5a4', text: '#087f7d',
+    blurb: 'Profiles rows, columns, missing values, class balance, and potential data quality risks.',
+    output: 'Dataset profile and quality notes', gate: null },
+  { id: 'prep', name: 'Preprocessing', short: 'Prep', color: '#13b58c', text: '#0e9c78',
     blurb: 'Proposes a cleaning plan with a reason for every step, then runs it and checks the result.',
-    output: 'Clean data and before/after charts', gate: 'Approve the cleaning plan' },
-  { id: 'model', name: 'Model selection', short: 'Model', color: '#f5a524', text: '#d98200',
-    blurb: 'Suggests two to four models that suit your data and explains why. You can paste your own.',
-    output: 'A shortlist with reasons', gate: 'Pick a model' },
-  { id: 'train', name: 'Training', short: 'Training', color: '#ff6b57', text: '#f0503a',
-    blurb: 'Trains inside your project’s own sandbox and streams every epoch to your screen.',
-    output: 'Metrics and the best checkpoint', gate: 'Confirm training settings' },
-  { id: 'eval', name: 'Evaluation', short: 'Results', color: '#8b5cf6', text: '#7a45f0',
-    blurb: 'Scores the model with metrics that fit the task and compares them with your target.',
-    output: 'Metrics and charts', gate: 'Approve the results' },
-  { id: 'export', name: 'Export and packaging', short: 'Export', color: '#18b4e8', text: '#0e9bcb',
-    blurb: 'Bundles the model, notebook and an inference script into one download.',
-    output: 'A ready-to-use archive', gate: null },
+    output: 'Clean training data', gate: 'Approve the preprocessing plan' },
+  { id: 'train', name: 'Model Training', short: 'Training', color: '#ff6b57', text: '#f0503a',
+    blurb: 'Selects a strong baseline and trains it inside your project sandbox while streaming progress.',
+    output: 'Trained model and checkpoint', gate: null },
+  { id: 'eval', name: 'Evaluation', short: 'Evaluate', color: '#8b5cf6', text: '#7a45f0',
+    blurb: 'Scores the model against the held-out data and checks it against the goal you provided.',
+    output: 'Metrics and evaluation charts', gate: null },
+  { id: 'report', name: 'Report', short: 'Report', color: '#18b4e8', text: '#0e9bcb',
+    blurb: 'Packages the notebook, model, preprocessing steps, and results into a reusable report.',
+    output: 'Export-ready report archive', gate: null },
 ]
 
 export const COMPARE = [
@@ -28,11 +31,11 @@ export const COMPARE = [
 
 export const SEED_PROJECTS = [
   { id: 'p1', name: 'Customer churn', goal: 'Predict whether a bank customer will leave, from account history. Aim for accuracy above 85%.',
-    done: 1, status: 'waiting', gate: 'Approve the cleaning plan', updated: '12 min ago' },
+    done: 3, status: 'waiting', gate: 'Approve the preprocessing plan', updated: '12 min ago' },
   { id: 'p2', name: 'House prices', goal: 'Estimate the sale price of a house from its size, location and age.',
-    done: 3, status: 'running', gate: null, updated: 'Just now' },
+    done: 5, status: 'running', gate: null, updated: 'Just now' },
   { id: 'p3', name: 'Loan approval', goal: 'Predict loan approval from applicant income and credit history.',
-    done: 6, status: 'done', gate: null, updated: 'Yesterday', metric: 'F1 0.91' },
+    done: 7, status: 'done', gate: null, updated: 'Yesterday', metric: 'F1 0.91' },
 ]
 
 export const EXAMPLE_PROJECTS = [
@@ -43,9 +46,9 @@ export const EXAMPLE_PROJECTS = [
 
 export const ACTIVITY = [
   { id: 'a1', projectId: 'p2', agent: 'prep', text: 'Preprocessing finished on House prices', time: '2 min ago' },
-  { id: 'a2', projectId: 'p3', agent: 'export', text: 'Archive ready for Loan approval', time: 'Yesterday' },
-  { id: 'a3', projectId: 'p1', agent: 'prep', text: 'Cleaning plan ready on Customer churn', time: '12 min ago' },
-  { id: 'a4', projectId: 'p1', agent: 'data', text: 'Dataset profile created for Customer churn', time: '42 min ago' },
+  { id: 'a2', projectId: 'p3', agent: 'report', text: 'Report ready for Loan approval', time: 'Yesterday' },
+  { id: 'a3', projectId: 'p1', agent: 'prep', text: 'Preprocessing plan ready on Customer churn', time: '12 min ago' },
+  { id: 'a4', projectId: 'p1', agent: 'profile', text: 'Dataset profile created for Customer churn', time: '42 min ago' },
 ]
 
 /* ------------ scripted run used by the pipeline prototype ------------ */
@@ -57,7 +60,14 @@ const epochs = Array.from({ length: 20 }, (_, i) => {
 })
 
 export const STAGES = [
-  { // data
+  { // prompt
+    pre: [
+      { t: 650, log: 'Reading the goal and identifying the prediction task', cell: { kind: 'code', text: "goal = 'Predict whether a bank customer will leave'\ntask = classify(goal)" } },
+      { t: 650, log: 'Plan ready: binary classification on tabular data', cell: { kind: 'out', text: 'task: classification\ntarget: customer churn\nmetric: accuracy + F1' } },
+    ],
+    post: [],
+  },
+  { // dataset
     pre: [
       { t: 700, log: 'Searching Kaggle and HuggingFace' },
       { t: 1200, log: 'Found 6 candidates, ranked by fit to your goal' },
@@ -74,15 +84,21 @@ export const STAGES = [
     post: [
       { t: 800, log: 'Downloading dataset', cell: { kind: 'code', text: "import pandas as pd\ndf = pd.read_csv('data/bank_churn.csv')\ndf.shape" } },
       { t: 700, cell: { kind: 'out', text: '(10000, 14)' } },
-      { t: 800, log: 'Profile ready: 2 columns with missing values, 20% of customers left', cell: { kind: 'md', text: '**Profile.** 10,000 customers, 14 columns. `Age` and `Balance` have gaps. About 20% of customers churned, so the classes are uneven.' } },
     ],
   },
-  { // prep
+  { // profile
     pre: [
-      { t: 900, log: 'Reading the profile and drafting a cleaning plan' },
+      { t: 700, log: 'Profiling rows, columns, missing values, and class balance', cell: { kind: 'code', text: "profile = inspect(df)\nprofile.missing\nprofile.target_balance" } },
+      { t: 800, log: 'Profile ready: 2 columns with missing values, 20% of customers left', cell: { kind: 'md', text: '**Profile.** 10,000 customers, 14 columns. `Age` and `Balance` have gaps. About 20% of customers churned, so the classes are uneven.' } },
+    ],
+    post: [],
+  },
+  { // preprocessing
+    pre: [
+      { t: 900, log: 'Reading the profile and drafting a preprocessing plan' },
     ],
     gate: {
-      title: 'Approve the cleaning plan', body: 'Each step comes with a reason. Send it back with a comment if you want something changed.',
+      title: 'Approve the preprocessing plan', body: 'Each step comes with a reason. Send it back with a comment if you want something changed.',
       plan: [
         ['Fill missing Age and Balance with the median', 'Median is not thrown off by a few very large balances.'],
         ['Encode Geography and Gender', 'Models need numbers, not text.'],
@@ -90,7 +106,7 @@ export const STAGES = [
         ['Drop duplicate rows', 'Repeated rows would leak into the test set.'],
         ['Split 80% train, 20% test', 'Keeps data the model has never seen for scoring.'],
       ],
-      cta: 'Approve plan',
+      cta: 'Approve preprocessing',
     },
     post: [
       { t: 900, log: 'Running the approved plan', cell: { kind: 'code', text: "X = df.drop(columns=['Exited'])\nX['Geography_enc'] = enc.fit_transform(X[['Geography']])\nX_train, X_test, y_train, y_test = train_test_split(X, df['Exited'], test_size=0.2)" } },
@@ -99,62 +115,29 @@ export const STAGES = [
       { t: 800, log: 'Fixed. Shape check passed', cell: { kind: 'out', text: 'train (8000, 13)   test (2000, 13)   ✓ validation passed' }, repair: 0 },
     ],
   },
-  { // model
+  { // training
     pre: [
-      { t: 900, log: 'Comparing models against dataset size and class balance' },
-    ],
-    gate: {
-      title: 'Pick a model', body: 'Three suit this data. Paste a HuggingFace model id instead if you have one.',
-      options: [
-        { id: 'a', label: 'Gradient boosting', meta: 'Strong on tabular data, handles uneven classes well' },
-        { id: 'b', label: 'Random forest', meta: 'Steady and hard to overfit, slightly lower ceiling' },
-        { id: 'c', label: 'Logistic regression', meta: 'Fast baseline, easy to explain' },
-      ],
-      cta: 'Use this model',
-    },
-    post: [
-      { t: 700, log: 'Model configuration saved', cell: { kind: 'md', text: '**Model.** Gradient boosting, 20 rounds, learning rate 0.1, depth 4. Chosen because the data is tabular and the classes are uneven.' } },
-    ],
-  },
-  { // train
-    pre: [
-      { t: 800, log: 'Building the training configuration' },
-    ],
-    gate: {
-      title: 'Confirm training settings', body: 'Training runs in your project’s sandbox. You can stop it at any time.',
-      plan: [
-        ['Rounds', '20'],
-        ['Learning rate', '0.1'],
-        ['Tree depth', '4'],
-        ['Hardware', 'CPU, about 40 seconds'],
-      ],
-      cta: 'Start training',
-    },
-    post: [
+      { t: 700, log: 'Comparing model baselines against dataset size and class balance', cell: { kind: 'md', text: '**Model.** Gradient boosting selected automatically because the data is tabular and the classes are uneven.' } },
       { t: 500, log: 'Training started', cell: { kind: 'code', text: "model = GradientBoostingClassifier(n_estimators=20, learning_rate=0.1, max_depth=4)\nmodel.fit(X_train, y_train)" } },
       ...epochs,
       { t: 400, log: 'Training finished, best checkpoint saved', cell: { kind: 'out', text: 'best epoch 20   loss 0.318   accuracy 0.865' } },
     ],
+    post: [],
   },
-  { // eval
+  { // evaluation
     pre: [
       { t: 900, log: 'Scoring on the held-out test set', cell: { kind: 'code', text: "print(classification_report(y_test, model.predict(X_test)))" } },
       { t: 900, cell: { kind: 'out', text: 'accuracy   0.864\nprecision  0.79\nrecall     0.52\nf1         0.63' }, log: 'Accuracy 86.4%, above your 85% target' },
     ],
-    gate: {
-      title: 'Approve the results', body: 'Accuracy beats your 85% target. Export, go back to model selection, or retrain.',
-      metrics: [['Accuracy', '86.4%'], ['Precision', '0.79'], ['Recall', '0.52'], ['F1', '0.63']],
-      cta: 'Approve and export',
-    },
     post: [],
   },
-  { // export
+  { // report
     pre: [
       { t: 800, log: 'Writing inference.py and requirements.txt' },
       { t: 900, log: 'Writing README and saving charts' },
-      { t: 900, log: 'Archive ready: churn-model.zip (4.2 MB)' },
+      { t: 900, log: 'Report ready: churn-model.zip (4.2 MB)' },
     ],
-    gate: null, post: [],
+    post: [],
   },
 ]
 

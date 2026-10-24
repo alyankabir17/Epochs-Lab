@@ -19,9 +19,8 @@ export function initialPipelineState(project) {
     statuses,
     waiting: gate >= 0 ? gate : null,
     choice: 'a',
-    log: gate >= 0 ? [{ time: 'Saved', text: `Waiting for you: ${project.gate}`, agent: gate }] : [],
-    cells: gate >= 0 ? [{ kind: 'md', text: `**${project.name}.** ${project.goal}` }] : [],
-    chat: gate >= 0 ? [{ role: 'user', text: project.goal }] : [],
+    log: gate >= 0 ? [{ time: 'Saved', text: `Needs your approval: ${project.gate}`, agent: gate }] : [],
+    cells: [{ kind: 'prompt', text: `**${project.name}.** ${project.goal}` }],
     loss: [], repair: 0, selected: Math.max(0, gate), tab: 'notebook', failed: null,
     runId: null, model: project.model || 'Gradient boosting', metric: project.metric || null,
   }
@@ -39,7 +38,7 @@ export function stageUpdate(statuses, index, status) {
 export function projectUpdateForStage(index, status) {
   return {
     done: status === 'done' ? index + 1 : index,
-    status: status === 'done' && index < 5 ? 'running' : status,
+    status: status === 'done' && index < AGENTS.length - 1 ? 'running' : status,
     gate: status === 'waiting' ? AGENTS[index].gate : null,
   }
 }

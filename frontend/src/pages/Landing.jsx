@@ -8,37 +8,22 @@ import AgentCard from '../components/landing/AgentCard'
 import BorderBeam from '../components/common/BorderBeam'
 import ThemeToggle from '../components/common/ThemeToggle'
 import PricingModule from '../components/landing/PricingModule'
+import { SlideTabs } from '../components/ui/slide-tabs'
 import Hero from './hero'
 import { AGENTS } from '../data/data'
 
-const LANDING_PIPELINE_STEPS = [
-  {
-    id: 'orchestrator',
-    name: 'Orchestrator',
-    color: '#2f4bd8',
-    blurb: 'Turns your goal into a structured task and routes it to the right specialists.',
-    output: 'A structured task for the pipeline',
-    gate: null,
-  },
-  ...AGENTS,
+const LANDING_PIPELINE_STEPS = AGENTS
+
+const LANDING_NAV_TABS = [
+  { label: 'How it works', href: '#how' },
+  { label: 'Pricing', href: '#pricing' },
+  { label: 'Features', href: '#features' },
+  { label: 'FAQ', href: '#faq' },
 ]
-
-function moveNavLink(event) {
-  if (event.pointerType !== 'mouse' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-  const bounds = event.currentTarget.getBoundingClientRect()
-  const x = Math.max(-2, Math.min(2, (event.clientX - (bounds.left + bounds.width / 2)) * 0.08))
-  const y = Math.max(-2, Math.min(2, (event.clientY - (bounds.top + bounds.height / 2)) * 0.08))
-  event.currentTarget.style.setProperty('--magnetic-x', `${x}px`)
-  event.currentTarget.style.setProperty('--magnetic-y', `${y}px`)
-}
-
-function resetNavLink(event) {
-  event.currentTarget.style.setProperty('--magnetic-x', '0px')
-  event.currentTarget.style.setProperty('--magnetic-y', '0px')
-}
 
 function Nav({ heroRef }) {
   const [scrolled, setScrolled] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   useEffect(() => {
     const hero = heroRef.current
     if (!hero) return
@@ -46,20 +31,33 @@ function Nav({ heroRef }) {
     observer.observe(hero)
     return () => observer.disconnect()
   }, [heroRef])
-  return <header className={`landing-nav ${scrolled ? 'is-scrolled' : ''}`}>
+  return <header className={`landing-nav ${scrolled ? 'is-scrolled' : 'is-hero'}`}>
     <div className="landing-nav-inner flex h-[60px] items-center justify-between gap-4">
       <Link to="/" aria-label="Epochs Lab home"><Logo /></Link>
-      <nav aria-label="Primary navigation" className="hidden items-center gap-7 text-sm font-semibold md:flex">
-        <a className="landing-nav-link" href="#how" onPointerMove={moveNavLink} onPointerLeave={resetNavLink}>How it works</a>
-        <a className="landing-nav-link" href="#pricing" onPointerMove={moveNavLink} onPointerLeave={resetNavLink}>Pricing</a>
-        <a className="landing-nav-link" href="#features" onPointerMove={moveNavLink} onPointerLeave={resetNavLink}>Features</a>
+      <nav aria-label="Primary navigation" className="hidden md:block">
+        <SlideTabs tabs={LANDING_NAV_TABS} />
       </nav>
       <div className="flex items-center gap-2">
         <ThemeToggle />
-         <Link to="/login" className="hidden min-h-11 items-center rounded-lg px-3 text-sm font-semibold sm:inline-flex">Sign in</Link>
+        <Link to="/login" className="hidden min-h-11 items-center rounded-lg px-3 text-sm font-semibold sm:inline-flex">Sign in</Link>
         <Link to="/app" className="landing-nav-action inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold sm:px-5">Start a project</Link>
+        <button
+          type="button"
+          className="landing-nav-menu-button"
+          aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={mobileMenuOpen}
+          onClick={() => setMobileMenuOpen((open) => !open)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
       </div>
     </div>
+    {mobileMenuOpen && <nav aria-label="Mobile navigation" className="landing-mobile-menu">
+      {LANDING_NAV_TABS.map((tab) => <a key={tab.href} href={tab.href} onClick={() => setMobileMenuOpen(false)}>{tab.label}</a>)}
+      <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
+    </nav>}
   </header>
 }
 
@@ -109,7 +107,7 @@ function How() {
       <ol className="agent-timeline" aria-label="Seven-step agent pipeline">
         {LANDING_PIPELINE_STEPS.map((agent, index) => <li key={agent.id} className="agent-timeline-item">
           <span className="agent-timeline-marker" style={{ '--agent-color': agent.color }} aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-          <div className="agent-timeline-card" data-scroll-reveal data-reveal-from={index % 2 ? 'right' : 'left'}><AgentCard agent={agent} /></div>
+          <div className="agent-timeline-card" data-scroll-reveal="true" data-revealed="false" data-reveal-from={index % 2 ? 'right' : 'left'}><AgentCard agent={agent} /></div>
         </li>)}
       </ol>
     </div>
@@ -128,7 +126,7 @@ const CONTROL_FEATURES = [
   {
     id: 'approval',
     title: 'Human-in-the-Loop',
-    description: 'The pipeline pauses at five critical gates. Review datasets, cleaning strategies, and model settings before execution.',
+     description: 'The pipeline pauses at two critical gates. Review the dataset and preprocessing plan before execution.',
   },
   {
     id: 'repair',
@@ -231,7 +229,7 @@ function Control() {
               >
                 {activeFeature === 0 && <div className="ide-approval">
                   <div className="ide-approval-heading">
-                    <div><p className="ide-muted">CELL [4] / PREPROCESSING AGENT</p><h3>Review cleaning plan</h3></div>
+                     <div><p className="ide-muted">CELL [4] / PREPROCESSING AGENT</p><h3>Review preprocessing plan</h3></div>
                     <span className="ide-awaiting"><i />Awaiting Approval</span>
                   </div>
                   <p className="ide-comment"># Proposed strategy: fill missing values, scale, encode</p>

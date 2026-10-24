@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import AuthShell from '../components/auth/AuthShell'
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const navigate = useNavigate()
 
   const submit = (event) => {
     event.preventDefault()
-    setSubmitted(true)
+    navigate('/app')
   }
 
   return <AuthShell
@@ -35,7 +35,6 @@ export default function LoginPage() {
         </div>
       </div>
       <button type="submit" className="auth-submit">Sign in</button>
-      {submitted && <p className="auth-demo-message" role="status">Demo mode: authentication is not connected yet.</p>}
     </form>
   </AuthShell>
 }

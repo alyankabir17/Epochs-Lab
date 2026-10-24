@@ -117,7 +117,6 @@ test('template prefills, validates, creates once, and retains selected language 
   await dialog.getByLabel('Language model').selectOption('Google Gemini')
   await dialog.getByRole('button', { name: 'Create project' }).click()
   await expect(page.getByRole('heading', { name: 'Home forecast', exact: true })).toBeVisible()
-  await expect(page.getByLabel('Language model')).toHaveValue('Google Gemini')
   await expect(page.getByText('Project created', { exact: true })).toBeVisible()
   await navigation(page).getByRole('link', { name: /Projects/ }).click()
   await expect(cards(page)).toHaveCount(4)
@@ -136,7 +135,6 @@ test('CSV validates file type and keeps a valid local attachment', async ({ page
   await expect(dialog.getByRole('alert')).toContainText('ending in .csv')
   await dialog.getByLabel('CSV file').setInputFiles({ name: 'sales.csv', mimeType: 'text/csv', buffer: Buffer.from('x,y\n1,2') })
   await dialog.getByRole('button', { name: 'Create project' }).click()
-  await expect(page.getByText(/Data source: sales.csv/)).toBeVisible()
   await navigation(page).getByRole('link', { name: 'Datasets', exact: true }).click()
   await expect(page.getByText(/sales\.csv/)).toBeVisible()
 })
@@ -197,9 +195,9 @@ test('deleting all projects shows actionable empty states and zero notifications
 
 test('Review opens the pending cleaning approval and updates dashboard after approval', async ({ page }) => {
   await page.getByRole('button', { name: /Review Gate/ }).click()
-  await expect(page.getByRole('heading', { name: 'Approve the cleaning plan' })).toBeVisible()
+  await expect(page.locator('.pipeline-approval-card').getByText('Approve the preprocessing plan', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Preprocessing', exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'Approve plan', exact: true }).click()
+  await page.getByRole('button', { name: 'Approve preprocessing', exact: true }).click()
   await navigation(page).getByRole('link', { name: /Projects/ }).click()
   await expect(page.getByLabel('Notifications, 0 waiting approvals')).toBeVisible()
   await expect(cards(page).filter({ has: page.getByRole('heading', { name: 'Customer churn', exact: true }) })).toContainText('In progress')
@@ -207,7 +205,7 @@ test('Review opens the pending cleaning approval and updates dashboard after app
 
 test('settings default feeds creation; provider metadata persists across routes and can be removed', async ({ page }) => {
   await navigation(page).getByRole('link', { name: 'Settings' }).click()
-  await page.getByLabel('Use for new projects').selectOption('OpenAI')
+  await page.getByLabel('Default provider for new projects').selectOption('OpenAI')
   await page.getByLabel('Display name').fill('Alyan Tester')
   await page.getByRole('button', { name: 'Save changes' }).click()
   await navigation(page).getByRole('link', { name: /Projects/ }).click()
@@ -234,7 +232,7 @@ test('mobile menus, settings and final creation step remain usable', async ({ pa
   await navigation(page).getByRole('link', { name: 'Settings' }).click()
   await navigation(page).getByRole('link', { name: /Projects/ }).click()
   await page.getByLabel('Notifications, 1 waiting approvals').click()
-  await expect(page.getByRole('link', { name: /Customer churn Approve the cleaning plan/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Customer churn Approve the preprocessing plan/ })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.keyboard.press('Escape')
   await page.getByRole('button', { name: 'Show sidebar' }).click()

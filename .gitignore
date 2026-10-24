@@ -7,7 +7,7 @@ dist/
 dist-ssr/
 frontend/dist/
 frontend/dist-ssr/
-
+frontend/artifacts/navbar
 # Logs & Debug
 logs
 *.log
@@ -20,6 +20,7 @@ lerna-debug.log*
 # Test artifacts
 test-results/
 frontend/test-results/
+frontend/artifacts/tests/
 playwright-report/
 frontend/playwright-report/
 

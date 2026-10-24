@@ -21,14 +21,14 @@ test('new projects initialize with all stages idle', () => {
 test('running projects restore completed and active stages from their own progress', () => {
   const state = initialPipelineState(project('running', 3))
   assert.equal(state.phase, 'running')
-  assert.deepEqual(state.statuses, ['done', 'done', 'done', 'running', 'idle', 'idle'])
+  assert.deepEqual(state.statuses, ['done', 'done', 'done', 'running', 'idle', 'idle', 'idle'])
 })
 
 test('waiting projects restore the matching named approval gate', () => {
-  const state = initialPipelineState(project('waiting', 1, 'Approve the cleaning plan'))
+  const state = initialPipelineState(project('waiting', 3, 'Approve the preprocessing plan'))
   assert.equal(state.phase, 'running')
-  assert.equal(state.waiting, 1)
-  assert.deepEqual(state.statuses, ['done', 'waiting', 'idle', 'idle', 'idle', 'idle'])
+  assert.equal(state.waiting, 3)
+  assert.deepEqual(state.statuses, ['done', 'done', 'done', 'waiting', 'idle', 'idle', 'idle'])
 })
 
 test('completed projects restore every stage as done', () => {
@@ -40,5 +40,5 @@ test('completed projects restore every stage as done', () => {
 test('failed projects mark the current stage as failed', () => {
   const state = initialPipelineState(project('failed', 2))
   assert.equal(state.phase, 'failed')
-  assert.deepEqual(state.statuses, ['done', 'done', 'failed', 'idle', 'idle', 'idle'])
+  assert.deepEqual(state.statuses, ['done', 'done', 'failed', 'idle', 'idle', 'idle', 'idle'])
 })

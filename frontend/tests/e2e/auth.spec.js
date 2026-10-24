@@ -12,6 +12,11 @@ test('login page renders its themed form and password toggle', async ({ page }) 
   await page.getByRole('button', { name: 'Show password' }).click()
   await expect(password).toHaveAttribute('type', 'text')
   await expect(page.getByRole('link', { name: 'Sign up' })).toBeVisible()
+
+  await page.getByLabel('Email').fill('demo@example.com')
+  await password.fill('anything')
+  await page.getByRole('button', { name: 'Sign in' }).click()
+  await expect(page.getByRole('heading', { name: /workspace/i })).toBeVisible()
 })
 
 test('signup page renders its form and links back to login', async ({ page }) => {

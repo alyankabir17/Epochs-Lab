@@ -12,27 +12,22 @@ function DatasetPreview() {
   )
 }
 
+function PromptPreview() {
+  return <div className="mini-preview" style={{ '--agent-color': '#7c3aed' }} aria-label="Prompt analysis preview"><div className="mini-row"><span className="mini-check">✓</span><span className="mini-line strong" /></div><div className="mini-row"><span className="mini-dot" /><span className="mini-line medium" /><span className="mini-tag">classification</span></div></div>
+}
+
+function ProfilePreview() {
+  return <div className="mini-preview grid grid-cols-3 gap-2" style={{ '--agent-color': '#0ea5a4' }} aria-label="Data profiling preview">{[['rows', '10k'], ['cols', '14'], ['missing', '2']].map(([label, value]) => <div className="rounded-lg bg-wash px-2 py-2" key={label}><p className="font-display text-base font-bold text-navy">{value}</p><p className="mt-0.5 text-[10px] font-semibold text-soft">{label}</p></div>)}</div>
+}
+
 function CleaningPreview() {
   return (
-    <div className="mini-preview" style={{ '--agent-color': '#13b58c' }} aria-label="Cleaning plan preview">
+      <div className="mini-preview" style={{ '--agent-color': '#13b58c' }} aria-label="Preprocessing plan preview">
       {['Fill missing values', 'Encode categories', 'Split train and test'].map((label) => (
         <div className="mini-row" key={label}>
           <span className="mini-check">✓</span>
           <span className="mini-line medium" />
           <span className="sr-only">{label}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function ModelPreview() {
-  return (
-    <div className="mini-preview" style={{ '--agent-color': '#f5a524' }} aria-label="Model comparison preview">
-      {[['Gradient boosting', '82%'], ['Random forest', '68%'], ['Logistic regression', '51%']].map(([label, fit]) => (
-        <div className="mini-row" key={label}>
-          <span className="mini-line short" />
-          <span className="mini-bar" style={{ '--fit': fit }} />
         </div>
       ))}
     </div>
@@ -63,14 +58,14 @@ function EvaluationPreview() {
 
 function ExportPreview() {
   return (
-    <div className="mini-preview" style={{ '--agent-color': '#18b4e8' }} aria-label="Export file tree preview">
+      <div className="mini-preview" style={{ '--agent-color': '#18b4e8' }} aria-label="Report file tree preview">
       {['model.pkl', 'notebook.ipynb', 'inference.py', 'requirements.txt', 'README.md'].map((file) => <div className="mini-file" key={file}>{file}</div>)}
     </div>
   )
 }
 
 export default function AgentPreview({ id }) {
-  const previews = { data: DatasetPreview, prep: CleaningPreview, model: ModelPreview, train: TrainingPreview, eval: EvaluationPreview, export: ExportPreview }
+  const previews = { prompt: PromptPreview, dataset: DatasetPreview, profile: ProfilePreview, prep: CleaningPreview, train: TrainingPreview, eval: EvaluationPreview, report: ExportPreview }
   const Preview = previews[id]
   return Preview ? <Preview /> : null
 }

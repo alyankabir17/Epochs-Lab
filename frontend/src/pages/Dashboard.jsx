@@ -21,7 +21,7 @@ const FILTERS = [
   { id: 'done', label: 'Done' },
 ]
 
-const STAGE_ICONS = [Database, Workflow, BrainCircuit, Activity, ShieldCheck, FileText]
+const STAGE_ICONS = [Sparkles, Search, Database, Workflow, BrainCircuit, Activity, FileText]
 const SIDEBAR_MIN_WIDTH = 200
 const SIDEBAR_MAX_WIDTH = 340
 const SIDEBAR_DEFAULT_WIDTH = 256
@@ -50,11 +50,11 @@ function readSidebarCollapsed() {
 
 function progressFor(project) {
   const stage = project.status === 'done'
-    ? 7
+    ? AGENTS.length
     : project.status === 'idle'
       ? 1
-      : Math.min(6, Math.max(1, (project.done || 0) + 1)) + 1
-  const stageName = stage === 1 ? 'Orchestrator' : AGENTS[stage - 2]?.name || 'Complete'
+      : Math.min(AGENTS.length, Math.max(1, (project.done || 0) + (project.status === 'running' ? 1 : 0)))
+  const stageName = AGENTS[stage - 1]?.name || 'Complete'
   return { stage, stageName, percent: Math.round((stage / 7) * 100) }
 }
 

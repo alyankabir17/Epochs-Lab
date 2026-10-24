@@ -61,7 +61,7 @@ function HeroScene() {
 }
 
 export default function Hero({ heroRef, onStart, onLearnMore }) {
-  return <section ref={heroRef} id="landing-hero" className="relative isolate flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#07090f]">
+  return <section ref={heroRef} id="landing-hero" className="landing-hero relative isolate flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#07090f]">
     <CursorGlow />
     <HeroScene />
 

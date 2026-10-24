@@ -67,7 +67,7 @@ export default function AppShell() {
         <div className="mt-auto hidden pt-12 lg:block">
           <div className="mb-5 rounded-2xl border border-line bg-panel/60 p-4">
             <p className="text-sm font-bold">Your ML workspace</p>
-            <p className="mt-2 text-sm leading-relaxed text-soft">Six specialists.<br />You make the decisions.</p>
+             <p className="mt-2 text-sm leading-relaxed text-soft">Seven specialists.<br />You make the decisions.</p>
             <Link to="/" className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-action">Explore Epochs Lab <ArrowUpRight size={15} /></Link>
           </div>
           <Link to="/app/settings" className="flex min-w-0 items-center gap-3 rounded-xl px-2 py-3 hover:bg-panel">

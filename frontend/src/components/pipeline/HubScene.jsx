@@ -6,7 +6,7 @@ import { AGENTS } from '../../data/data'
 
 const R = 3.1
 const posOf = (i) => {
-  const a = (i / 6) * Math.PI * 2 - Math.PI / 2
+  const a = (i / AGENTS.length) * Math.PI * 2 - Math.PI / 2
   return [Math.cos(a) * R, Math.sin(a) * R * 0.62, Math.sin(a * 2) * 0.9]
 }
 
@@ -118,7 +118,7 @@ function Autoplay({ onStatuses, disabled }) {
   const last = useRef(-1)
   useFrame((s) => {
     if (disabled) return
-    const step = Math.floor(s.clock.elapsedTime / 1.7) % 8 // 0..5 running, 6..7 all done
+     const step = Math.floor(s.clock.elapsedTime / 1.7) % (AGENTS.length + 2)
     if (step !== last.current) {
       last.current = step
       onStatuses(AGENTS.map((_, i) => (i < step ? 'done' : i === step ? (step === 0 || step === 2 || step === 4 ? 'waiting' : 'running') : 'idle')))
