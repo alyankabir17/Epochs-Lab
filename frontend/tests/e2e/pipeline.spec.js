@@ -1,0 +1,133 @@
+import { test, expect } from '@playwright/test'
+
+let errors = []
+test.beforeEach(async ({ page }) => {
+  errors = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()) })
+  await page.goto('/')
+  await page.getByRole('link', { name: 'Start a project', exact: true }).first().click()
+  await page.locator('a.project-card-body').filter({ hasText: 'Customer churn' }).first().click()
+  await expect(page.locator('h1', { hasText: 'Customer churn' })).toBeVisible()
+})
+test.afterEach(() => expect(errors).toEqual([]))
+
+test('pending project restores the cleaning gate in the live radial layout and approval flow', async ({ page }) => {
+  await expect(page.getByRole('heading', { name: 'Approve the cleaning plan' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Preprocessing', exact: true })).toBeVisible()
+  await expect(page.getByRole('list', { name: 'Pipeline stages' })).toContainText('Cleaning')
+  await expect(page.getByRole('group', { name: 'Live agent pipeline' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Live Logs & Approvals' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Python output' })).toBeVisible()
+  await expect(page.locator('.pipeline-stage-rail')).toHaveCount(0)
+  await expect(page.getByText('Waiting for you', { exact: true }).first()).toBeVisible()
+  await page.getByLabel('Comment for the agent').fill('Keep the median imputation, but explain the split.')
+  await page.getByRole('button', { name: 'Send back', exact: true }).click()
+  await expect(page.getByText('Sent back to the agent', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Approve plan', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Preprocessing', exact: true })).toBeVisible()
+  await expect(page.getByText(/Running|Fix attempt 1 of 3/).first()).toBeVisible({ timeout: 5000 })
+})
+
+test('dataset and compare tabs expose the pipeline evidence before export', async ({ page }) => {
+  await page.getByRole('tab', { name: 'Dataset' }).click()
+  await expect(page.getByRole('heading', { name: 'Bank Customer Churn' })).toBeVisible()
+  await expect(page.getByText('10,000')).toBeVisible()
+  await expect(page.getByRole('table')).toContainText('Geography')
+  await page.getByRole('tab', { name: 'Compare' }).click()
+  await expect(page.getByRole('heading', { name: 'Model comparison' })).toBeVisible()
+  await expect(page.getByRole('table')).toContainText('Gradient boosting')
+  await page.locator('tr').filter({ hasText: 'Random forest' }).getByRole('button', { name: 'Choose', exact: true }).click()
+  await expect(page.locator('tr').filter({ hasText: 'Random forest' }).getByRole('button', { name: 'Selected', exact: true })).toBeVisible()
+})
+
+test('starting a fresh run creates history and pauses at dataset selection', async ({ page }) => {
+  await page.getByRole('link', { name: 'All projects' }).click()
+  await page.locator('a.project-card-body').filter({ hasText: 'House prices' }).click()
+  await page.getByRole('button', { name: 'Start run' }).click()
+  const radial = page.getByRole('group', { name: 'Live agent pipeline' })
+  await expect(radial).toBeVisible({ timeout: 5000 })
+  await expect(radial.getByRole('list', { name: 'Pipeline stages' }).getByRole('listitem')).toHaveCount(6)
+  await expect(page.locator('.pipeline-stage-rail')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Live Logs & Approvals' })).toBeVisible()
+  await radial.getByRole('button', { name: 'Preprocessing: Queued' }).click()
+  await expect(page.locator('.pipeline-agent-detail h2')).toHaveText('Preprocessing')
+  await expect(page.getByRole('heading', { name: 'Choose a dataset' })).toBeVisible({ timeout: 8000 })
+  await expect(radial).toBeVisible()
+  await expect(page.locator('.pipeline-stage-rail')).toHaveCount(0)
+  await page.getByLabel('Run history').click()
+  await expect(page.getByText('Gradient boosting').first()).toBeVisible()
+  await expect(page.getByRole('button', { name: /Gradient boosting .* running/ }).first()).toBeVisible()
+})
+
+test('newly created projects use the radial workflow before and after starting a run', async ({ page }) => {
+  await page.getByRole('link', { name: 'All projects' }).click()
+  await page.getByRole('button', { name: 'New project', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'New project' })
+  await dialog.getByLabel('Project name').fill('Dynamic pipeline check')
+  await dialog.getByRole('button', { name: 'Continue' }).click()
+  await dialog.getByLabel('What do you want to predict?').fill('Predict next month demand from monthly sales history.')
+  await dialog.getByRole('button', { name: 'Continue' }).click()
+  await dialog.getByRole('button', { name: 'Create project' }).click()
+
+  const radial = page.getByRole('group', { name: 'Live agent pipeline' })
+  await expect(page.getByRole('heading', { name: 'Dynamic pipeline check', exact: true })).toBeVisible()
+  await expect(radial).toBeVisible()
+  await expect(page.locator('.pipeline-live-indicator')).toHaveText('Ready to run')
+  await expect(radial.getByRole('list', { name: 'Pipeline stages' }).getByRole('listitem')).toHaveCount(6)
+  await expect(radial).toContainText('Not started')
+
+  await page.getByRole('button', { name: 'Start run' }).click()
+  await expect(page.locator('.pipeline-live-indicator')).toHaveText('Running')
+  await expect(radial).toBeVisible()
+  await expect(page.locator('.pipeline-live-log')).toContainText('Run started')
+})
+
+test('run can complete through gates, preserves failure recovery and unlocks artifacts/Copilot', async ({ page }) => {
+  await page.getByRole('button', { name: 'Restart' }).click()
+  await expect(page.getByRole('heading', { name: 'Choose a dataset' })).toBeVisible({ timeout: 8000 })
+  await page.getByRole('radio', { name: /Bank Customer Churn/ }).click()
+  await page.getByRole('button', { name: 'Use this dataset', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Approve the cleaning plan' })).toBeVisible({ timeout: 8000 })
+  await page.getByRole('button', { name: 'Approve plan', exact: true }).click()
+  await expect(page.getByText('Fix attempt 1 of 3', { exact: true })).toBeVisible({ timeout: 6000 })
+  await expect(page.getByRole('button', { name: 'Retry with corrected columns' })).toBeVisible()
+  await page.getByRole('button', { name: 'Retry with corrected columns' }).click()
+  await expect(page.getByRole('heading', { name: 'Pick a model' })).toBeVisible({ timeout: 8000 })
+  await page.getByRole('radio', { name: /Gradient boosting/ }).click()
+  await page.getByRole('button', { name: 'Use this model', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Confirm training settings' })).toBeVisible({ timeout: 8000 })
+  await page.getByRole('button', { name: 'Start training', exact: true }).click()
+  await expect(page.getByText(/Epoch 1\/20/).last()).toBeVisible({ timeout: 10000 })
+  await expect(page.getByText(/Epoch 20\/20/).last()).toBeVisible({ timeout: 15000 })
+  await expect(page.getByRole('heading', { name: 'Approve the results' })).toBeVisible({ timeout: 8000 })
+  await page.getByRole('button', { name: 'Approve and export', exact: true }).click()
+  await expect(page.getByRole('tab', { name: 'Artifacts' })).toBeVisible({ timeout: 10000 })
+  await expect(page.getByText('Exported artifacts')).toBeVisible({ timeout: 10000 })
+  await expect(page.getByRole('textbox', { name: 'Ask the Notebook Copilot' })).toBeEnabled()
+  await page.getByRole('textbox', { name: 'Ask the Notebook Copilot' }).fill('Which features matter most?')
+  await page.getByRole('button', { name: 'Send to Copilot' }).click()
+  await expect(page.getByText(/I ran that in your live kernel/)).toBeVisible({ timeout: 3000 })
+})
+
+test('live run uses a 65/35 radial and context-panel split on desktop', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  const layout = page.locator('.pipeline-live-layout')
+  await expect(layout).toBeVisible()
+  const ratio = await layout.evaluate((element) => {
+    const [main, context] = getComputedStyle(element).gridTemplateColumns.split(' ').map(parseFloat)
+    return main / context
+  })
+  expect(ratio).toBeGreaterThan(1.7)
+  expect(ratio).toBeLessThan(2)
+  await expect(page.locator('.pipeline-terminal')).toHaveCSS('background-color', 'rgb(17, 24, 39)')
+})
+
+for (const width of [390, 768, 1440]) {
+  test(`pipeline remains readable without horizontal overflow at ${width}px`, async ({ page }, info) => {
+    await page.setViewportSize({ width, height: 1000 })
+    await page.screenshot({ path: info.outputPath('pipeline.png'), fullPage: true })
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await expect(page.getByRole('list', { name: 'Pipeline stages' })).toBeVisible()
+  })
+}
