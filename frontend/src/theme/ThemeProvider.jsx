@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { applyTheme, getStoredTheme, persistTheme, THEME_KEY } from '../theme'
+import { applyTheme, getStoredTheme, persistTheme, THEME_KEY } from './theme'
 import { ThemeContext } from './ThemeContext'
 
 export function ThemeProvider({ children }) {

@@ -9,7 +9,7 @@ import BorderBeam from '../components/common/BorderBeam'
 import ThemeToggle from '../components/common/ThemeToggle'
 import PricingModule from '../components/landing/PricingModule'
 import { SlideTabs } from '../components/ui/slide-tabs'
-import Hero from './hero'
+import Hero from '../components/landing/Hero'
 import { AGENTS } from '../data/data'
 
 const LANDING_PIPELINE_STEPS = AGENTS

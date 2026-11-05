@@ -1,17 +1,17 @@
 import { lazy } from 'react'
 import { MemoryRouter, Routes, Route, useParams } from 'react-router-dom'
-import Landing from './pages/Landing'
-import LoginPage from './pages/LoginPage'
-import SignupPage from './pages/SignupPage'
-import AppShell from './pages/AppShell'
-import Pipeline from './pages/Pipeline'
-import Keys from './pages/Keys'
-import Settings from './pages/Settings'
-import Datasets from './pages/Datasets'
-import DatasetExplorer from './components/dashboard/DatasetExplorer'
-import { useStore } from './context/store'
+import Landing from '../pages/Landing'
+import LoginPage from '../pages/LoginPage'
+import SignupPage from '../pages/SignupPage'
+import AppShell from '../pages/AppShell'
+import Pipeline from '../pages/Pipeline'
+import Keys from '../pages/Keys'
+import Settings from '../pages/Settings'
+import Datasets from '../pages/Datasets'
+import DatasetExplorer from '../components/dashboard/DatasetExplorer'
+import { useStore } from '../context/store'
 
-const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Dashboard = lazy(() => import('../pages/Dashboard'))
 
 function ProjectRoute() {
   const { id } = useParams()
